@@ -1,0 +1,70 @@
+{
+  "_comentario": "Escopo do Raio-X 2026 é só a eleição presidencial — este JSON traz apenas os mandatos de Presidente da República desde 1995, com fonte oficial. Não há coleta de governadores (fora de escopo). Ver etl/raiox/jobs/periodos_governo.py.",
+
+  "presidentes": [
+    {
+      "nome": "Fernando Henrique Cardoso",
+      "inicio": "1995-01-01",
+      "fim": "1999-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/fernando-henrique-cardoso"
+    },
+    {
+      "nome": "Fernando Henrique Cardoso",
+      "inicio": "1999-01-01",
+      "fim": "2003-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/fernando-henrique-cardoso"
+    },
+    {
+      "nome": "Luiz Inácio Lula da Silva",
+      "inicio": "2003-01-01",
+      "fim": "2007-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/luiz-inacio-lula-da-silva-2003-2011"
+    },
+    {
+      "nome": "Luiz Inácio Lula da Silva",
+      "inicio": "2007-01-01",
+      "fim": "2011-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/luiz-inacio-lula-da-silva-2003-2011"
+    },
+    {
+      "nome": "Dilma Rousseff",
+      "inicio": "2011-01-01",
+      "fim": "2015-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/dilma-rousseff"
+    },
+    {
+      "nome": "Dilma Rousseff",
+      "inicio": "2015-01-01",
+      "fim": "2016-05-12",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/dilma-rousseff",
+      "observacao": "Segundo mandato interrompido em 12/05/2016, quando o Senado aprovou a abertura do processo de impeachment e afastou a presidenta por até 180 dias (art. 86, §1º, II da Constituição)."
+    },
+    {
+      "nome": "Michel Temer (interino)",
+      "inicio": "2016-05-12",
+      "fim": "2016-08-31",
+      "fonte_url": "https://www12.senado.leg.br/noticias/materias/2016/05/12/dilma-e-afastada-por-ate-180-dias-apos-senado-abrir-processo-de-impeachment",
+      "observacao": "Vice-presidente exercendo a Presidência durante o processo de impeachment de Dilma Rousseff."
+    },
+    {
+      "nome": "Michel Temer",
+      "inicio": "2016-08-31",
+      "fim": "2019-01-01",
+      "fonte_url": "https://www12.senado.leg.br/noticias/materias/2016/08/31/dilma-rousseff-sofre-impeachment-e-perde-o-mandato-definitivamente",
+      "observacao": "Assumiu em definitivo após o Senado aprovar o impeachment de Dilma Rousseff em 31/08/2016 e completou o mandato até 01/01/2019."
+    },
+    {
+      "nome": "Jair Bolsonaro",
+      "inicio": "2019-01-01",
+      "fim": "2023-01-01",
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/jair-bolsonaro"
+    },
+    {
+      "nome": "Luiz Inácio Lula da Silva",
+      "inicio": "2023-01-01",
+      "fim": null,
+      "fonte_url": "https://www.gov.br/planalto/pt-br/conheca-a-presidencia/acervo/galeria-de-presidentes/luiz-inacio-lula-da-silva-2023",
+      "observacao": "Mandato em curso; término previsto em 01/01/2027."
+    }
+  ]
+}

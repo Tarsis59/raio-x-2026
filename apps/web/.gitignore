@@ -36,6 +36,15 @@ yarn-error.log*
 # vercel
 .vercel
 
+# dados gerados (fixtures ou ETL real) — nunca versionados
+/public/dados/
+
+# playwright
+/e2e/**/*.png
+/playwright-report/
+/test-results/
+/blob-report/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
