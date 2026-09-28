@@ -1,0 +1,142 @@
+name: ETL — coletas agendadas
+
+# Horários em UTC (Brasília = UTC−3). Todos os jobs são idempotentes e incrementais.
+# Portões de qualidade: se um job falhar ou for bloqueado, o deploy NÃO roda com dados novos daquela fonte.
+on:
+  schedule:
+    - cron: '0 8 * * *'      # 05:00 BRT — legislativo, economia, TSE, judiciário, checagens → deploy
+    - cron: '0 20 * * *'     # 17:00 BRT — TSE (situação/contas), checagens → deploy
+  workflow_dispatch:
+    inputs:
+      grupo:
+        description: 'Grupo a executar'
+        type: choice
+        default: completo
+        options: [completo, tse, legislativo, economia, judiciario, checagens, ia]
+
+concurrency:
+  group: etl
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write   # para disparar o deploy
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  CPF_HMAC_SECRET: ${{ secrets.CPF_HMAC_SECRET }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  IA_S3_ACCESS_KEY: ${{ secrets.IA_S3_ACCESS_KEY }}
+  IA_S3_SECRET_KEY: ${{ secrets.IA_S3_SECRET_KEY }}
+  GOOGLE_FACTCHECK_API_KEY: ${{ secrets.GOOGLE_FACTCHECK_API_KEY }}
+  PORTAL_TRANSPARENCIA_API_KEY: ${{ secrets.PORTAL_TRANSPARENCIA_API_KEY }}
+  DATAJUD_API_KEY: ${{ secrets.DATAJUD_API_KEY }}
+  RAIOX_ARQUIVAR: '1'
+  PYTHONUTF8: '1'
+
+jobs:
+  plano:
+    runs-on: ubuntu-latest
+    outputs:
+      grupo: ${{ steps.g.outputs.grupo }}
+    steps:
+      - id: g
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then g="${{ inputs.grupo }}";
+          elif [ "${{ github.event.schedule }}" = "0 20 * * *" ]; then g="tarde";
+          else g="completo"; fi
+          echo "grupo=$g" >> "$GITHUB_OUTPUT"
+
+  tse:
+    needs: plano
+    if: contains(fromJSON('["completo","tse","tarde"]'), needs.plano.outputs.grupo)
+    # O TSE (Akamai) pode bloquear IPs de datacenter estrangeiros. Se isso acontecer,
+    # registre um runner self-hosted no Brasil e defina a variável de repositório TSE_RUNNER=self-hosted.
+    runs-on: ${{ vars.TSE_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: etl/uv.lock }
+      - name: Chromium
+        working-directory: etl
+        run: uv run playwright install --with-deps chromium
+      - name: Candidaturas (incremental)
+        working-directory: etl
+        run: uv run python -m raiox tse-candidaturas
+      - name: Prestação de contas
+        working-directory: etl
+        run: uv run python -m raiox tse-contas
+      - name: Documentos (planos de governo e certidões)
+        if: needs.plano.outputs.grupo != 'tarde'
+        working-directory: etl
+        run: uv run python -m raiox tse-arquivos
+      - name: Histórico eleitoral
+        if: needs.plano.outputs.grupo != 'tarde'
+        working-directory: etl
+        run: uv run python -m raiox tse-historico
+
+  legislativo:
+    needs: plano
+    if: contains(fromJSON('["completo","legislativo"]'), needs.plano.outputs.grupo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: etl/uv.lock }
+      - working-directory: etl
+        run: |
+          uv run python -m raiox camara
+          uv run python -m raiox senado
+          uv run python -m raiox cgu-emendas
+
+  economia:
+    needs: plano
+    if: contains(fromJSON('["completo","economia"]'), needs.plano.outputs.grupo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: etl/uv.lock }
+      - working-directory: etl
+        run: uv run python -m raiox economia
+
+  derivados:
+    # Depende das fontes primárias (vínculos, IA, judiciário, checagens)
+    needs: [plano, tse, legislativo, economia]
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: etl/uv.lock }
+      - name: Vínculo parlamentar ↔ candidato
+        working-directory: etl
+        run: uv run python -m raiox vinculo-parlamentar
+      - name: Certidões e DataJud
+        if: contains(fromJSON('["completo","judiciario"]'), needs.plano.outputs.grupo)
+        working-directory: etl
+        run: |
+          uv run python -m raiox ia-certidoes
+          uv run python -m raiox datajud
+      - name: Propostas (IA, só documentos novos)
+        if: contains(fromJSON('["completo","ia"]'), needs.plano.outputs.grupo)
+        working-directory: etl
+        run: uv run python -m raiox ia-propostas
+      - name: Checagens
+        if: contains(fromJSON('["completo","checagens","tarde"]'), needs.plano.outputs.grupo)
+        working-directory: etl
+        run: uv run python -m raiox factcheck
+
+  publicar:
+    needs: [tse, legislativo, economia, derivados]
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispara o deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --repo "${{ github.repository }}" -f motivo="ETL ${{ needs.plano.outputs.grupo }}"

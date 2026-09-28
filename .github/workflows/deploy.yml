@@ -1,0 +1,65 @@
+name: Deploy — exporta dados e publica o site
+
+# Disparado pelo ETL, pelo painel editorial (botão "Publicar agora") ou manualmente.
+# Cloudflare Pages (plano gratuito): 500 deploys/mês — o agendamento usa ~2/dia + publicações editoriais.
+on:
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: Motivo da publicação
+        default: manual
+  repository_dispatch:
+    types: [publicar]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: producao
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PYTHONUTF8: '1'
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      NEXT_PUBLIC_CORRECAO_URL: ${{ vars.CORRECAO_URL }}
+      NEXT_PUBLIC_CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true, cache-dependency-glob: etl/uv.lock }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Exporta os dados publicados (somente itens aprovados)
+        working-directory: etl
+        run: uv run python -m raiox exportar --saida ../apps/web/public/dados
+
+      - run: pnpm install --frozen-lockfile
+      - name: Build estático
+        run: pnpm --filter web build
+
+      - name: Verificações antes de publicar
+        run: |
+          n=$(find apps/web/out -type f | wc -l)
+          echo "Arquivos: $n"
+          test "$n" -lt 20000
+          # Nunca publicar dados fictícios nem CPF/título de eleitor
+          if grep -qE '"fixture": *true' apps/web/out/dados/meta.json; then echo "::error::Dados fictícios no build"; exit 1; fi
+          if grep -rqE '"(cpf|tituloEleitor|cpf_hmac)"' apps/web/out/dados; then echo "::error::Campo proibido no build"; exit 1; fi
+
+      - name: Publica no Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/web/out --project-name=${{ vars.CF_PAGES_PROJECT || 'raio-x-2026' }} --branch=main --commit-message="${{ inputs.motivo || github.event.client_payload.motivo || 'deploy' }}"
