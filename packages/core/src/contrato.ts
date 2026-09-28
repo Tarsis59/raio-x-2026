@@ -53,6 +53,8 @@ export interface Evidencia {
 // Meta e busca
 // ---------------------------------------------------------------------------
 export interface Meta {
+  /** true somente nos dados fictícios de desenvolvimento — o build de produção recusa. */
+  fixture?: boolean;
   geradoEm: DataISO;
   eleicao: { id: number; ano: number; data: DataISO; segundoTurno: DataISO };
   totais: { candidaturas: number; porCargo: Record<string, number> };
@@ -296,6 +298,23 @@ export interface BussolaArquivo {
   perguntas: PerguntaBussola[];
   candidatos: (CandidatoResumo & { posicoes: Record<string, PosicaoBussola> })[];
 }
+
+// ---------------------------------------------------------------------------
+// Correções (log público — correcoes.json)
+// ---------------------------------------------------------------------------
+export interface CorrecoesArquivo {
+  atualizadoEm: DataISO;
+  itens: {
+    data: DataISO;
+    pessoa: { nomeUrna: string; slug: string | null; id: number } | null;
+    tipo: string;
+    descricao: string;
+  }[];
+}
+
+/** Nome de arquivo por cargo/UF: `presidente-br`, `deputado-federal-sp`… */
+export const chaveArquivo = (cargo: CodigoCargo, uf: UF | string): string =>
+  `${CARGOS[cargo].slug}-${uf.toLowerCase()}`;
 
 // ---------------------------------------------------------------------------
 // Economia

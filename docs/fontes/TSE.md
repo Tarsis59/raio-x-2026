@@ -48,3 +48,9 @@ A listagem completa (131 chamadas em paralelo) leva cerca de 5 s.
 | 1 | Certidão (genérica) |
 
 O arquivo pode responder 404 enquanto aguarda anonimização. Nesse caso, tentar de novo no próximo ciclo.
+
+## Links públicos do site do TSE (SPA Angular)
+- Perfil do candidato: `https://divulgacandcontas.tse.jus.br/divulga/#/candidato/{regiao}/{UF}/{idEleicao}/{idCandidato}/{ano}/{sgUe}`.
+  Validado com `regiao=BR` para Presidente (`.../candidato/BR/BR/20322002026/280002551975/2026/BR`).
+- Subrotas do perfil: `/prestacao/receitas`, `/prestacao/despesas`, `/extratos`, `/historico`, `/nfes`, `/concentracao/despesas`, `/viceSuplente`.
+- Comparativo: `#/comparativo/candidatos/{idEleicao}/{abrangencia}/{ano}`.

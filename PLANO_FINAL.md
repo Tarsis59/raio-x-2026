@@ -1,7 +1,7 @@
 # Plano Final — Plataforma Cívica Eleições 2026
 
 > **REVISÃO 1.1 (27/09/2026) — decisões do dono do projeto, que prevalecem sobre o resto do documento:**
-> 1. **Escopo total, sem cortes:** todos os candidatos, de todos os cargos, com todas as funcionalidades.
+> 1. **Escopo (atualizado em 28/09/2026): somente a eleição PRESIDENCIAL** — os 14 candidatos a Presidente e seus vices, com TODAS as funcionalidades (Raio-X, comparador, dashboard econômico nacional, Bússola) no nível máximo de detalhe. Com esse escopo, a meta passa a ser **lançar antes do 1º turno (04/10/2026)**. O código de coleta mantém suporte a outros cargos para uso futuro.
 > 2. **Custo zero em infraestrutura.** Só a API do Claude é paga. A arquitetura oficial passa a ser a da seção **4-B**.
 > 3. O parecer jurídico já está coberto pelo advogado eleitoral do projeto.
 > 4. O nome do produto será definido depois (por enquanto, "Raio-X 2026").
