@@ -1,0 +1,17 @@
+{
+  "name": "raio-x-2026",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "turbo run dev --filter=web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "e2e": "pnpm --filter web e2e"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.5"
+  }
+}

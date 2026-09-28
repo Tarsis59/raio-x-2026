@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+# dados gerados
+etl/.cache/
+data/raw/
+data/build/
+.playwright-mcp/
+playwright-report/
+test-results/
+supabase/.temp/
+supabase/.branches/
